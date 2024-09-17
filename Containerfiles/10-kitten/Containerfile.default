@@ -2,7 +2,7 @@ ARG SYSBASE=quay.io/ykohut/almalinux:10-kitten
 FROM ${SYSBASE} AS system-build
 
 RUN mkdir /mnt/sys-root; \
-    dnf install -y \
+    dnf install --disablerepo=extras -y \
     --installroot /mnt/sys-root \
     --releasever 10 \
     --setopt install_weak_deps=false \
@@ -28,13 +28,13 @@ RUN mkdir /mnt/sys-root; \
     xz \
     ; \
     echo '%_install_langs en_US.UTF-8' > /etc/rpm/macros.image-language-conf ;\
-    dnf reinstall -y \
+    dnf reinstall --disablerepo=extras -y \
     --installroot /mnt/sys-root \
     --releasever 10 \
     --setopt install_weak_deps=false \
     --nodocs \
     krb5-libs ; \
-    dnf --installroot /mnt/sys-root clean all;
+    dnf --disablerepo=extras --installroot /mnt/sys-root clean all;
 # Additional hacks for kickstart file and backward compatable support   /mnt/sys-root/var/lib/dnf/history*
 RUN rm -rf /mnt/sys-root/var/log/dnf* /mnt/sys-root/var/log/yum.* /mnt/sys-root/usr/share/i18n/charmaps /mnt/sys-root/usr/share/i18n/locales ; \
     rm -rf /mnt/sys-root/var/cache/dnf/* /mnt/sys-root/var/lib/dnf/repos /mnt/sys-root/boot /mnt/sys-root/dev/null ; \
