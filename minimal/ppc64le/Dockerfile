@@ -1,4 +1,4 @@
-# Tags: 10-kitten-minimal, 10-kitten-minimal-20241025
+# Tags: 10-kitten-minimal, 10-kitten-minimal-20241118
 FROM scratch
 ADD almalinux-10-kitten-minimal-ppc64le.tar.xz /
 
