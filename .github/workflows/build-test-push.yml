@@ -14,10 +14,11 @@ on:
         version_major:
           description: 'AlmaLinux major version'
           required: true
-          default: '9'
+          default: '10'
           type: choice
           options:
             - "10-kitten"
+            - 10
             - 9
             - 8
 
