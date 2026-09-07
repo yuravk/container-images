@@ -202,6 +202,27 @@ jobs:
             *)
               echo "Almalinux ${{ matrix.version_major }} is not supported!" && false
           esac
+
+          if [[ "${{ env.pungi_repos }}" == "true" && "${{ matrix.version_major }}" =~ ^(9|10)$ ]]; then
+            # PUNGI builds install a pre-release almalinux-release (e.g.
+            # 10.3 while repo.almalinux.org still ships 10.2), so derive
+            # the minor version from the PUNGI compose the image is actually
+            # built from - otherwise the release-string test greps
+            # /etc/almalinux-release for the wrong version and the image
+            # tags get the old minor. The version is the same for all
+            # architectures, so query the x86_64 compose's BaseOS repodata.
+            pungi_repo="https://x86-64-pungi-${{ matrix.version_major }}.almalinux.dev/almalinux/${{ matrix.version_major }}/x86_64/latest_result_almalinux/compose/BaseOS/x86_64/os"
+            primary_href=$(curl -sf "${pungi_repo}/repodata/repomd.xml" | grep -oE 'repodata/[^"]*-primary\.xml\.gz' | head -n 1)
+            release=$(curl -sf "${pungi_repo}/${primary_href}" | gunzip \
+              | python3 -c 'import re,sys; print(re.search(r"<name>almalinux-release</name>.*?ver=\"([^\"]+)\"", sys.stdin.read(), re.S).group(1))')
+            if [[ ! "${release}" =~ ^${{ matrix.version_major }}\.[0-9]+$ ]]; then
+              echo "::error::Failed to derive the almalinux-release version from the PUNGI compose (${pungi_repo}): '${release}'"
+              exit 1
+            fi
+            echo "[Debug] almalinux-release version from the PUNGI compose: ${release}"
+            version_minor=".${release#*.}"
+          fi
+
           echo "version_minor=${version_minor}" >> $GITHUB_ENV
 
       -
