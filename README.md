@@ -570,24 +570,9 @@ version_latest: <version_latest>
 ```
 Where `<version_latest>` is an AlmaLinux version major version, for example `10`.
 
-## To bump AlmaLinux release (*Minor* number)
+## AlmaLinux release (*Minor* number)
 
-If a new AlmaLinux minor release is available, edit the [`.github/workflows/build-test-push.yml`](https://github.com/AlmaLinux/container-images/blob/main/.github/workflows/build-test-push.yml) workflow file (branch `master`) to set it. To do so, you need the "DeployPrepare AlmaLinux Minor version number" step:
-
-```sh
-          case ${{ inputs.version_major }} in
-            8)
-              version_minor="<8_minor>" ;;
-            9)
-              version_minor="<9_minor>"  ;;
-            10)
-              version_minor="<10_minor>" ;;
-
-```
-
-Where `<8_minor>`, `<9_minor>`, `<10_minor>` are AlmaLinux's corresponding minor versions.
-
-For example Minors are `10`, `4` or `1` for new **8.10**, **9.4** or **10.1** versions respectively.
+The Minor version is not hardcoded. The **Prepare AlmaLinux Minor version number** step of the [`.github/workflows/build-test-push.yml`](https://github.com/AlmaLinux/container-images/blob/main/.github/workflows/build-test-push.yml) workflow derives it from the `almalinux-release` package version found in the `BaseOS` repository the images are built from (`https://repo.almalinux.org/almalinux/<version_major>/BaseOS/x86_64/os`, or the PUNGI compose when `pungi_repos` is checked). Nothing needs to be edited when a new AlmaLinux minor release is published.
 
 ## To change scheduled time
 
@@ -701,7 +686,7 @@ The step sets:
 
 - `notify_mattermost` - environment variable value based on corresponded input `true` or `false` for workflow dispatch, or with default `true` value for scheduled workflow
 
-- `pungi_repos` - environment variable value based on corresponded input `true` or `false` for workflow dispatch, or with default `false` value for scheduled workflow. The value is passed to `docker buildx` as the `PUNGI_REPOS` build argument of the **Build images** and **Push images to Client Library** steps
+- `pungi_repos` - environment variable value based on corresponded input `true` or `false` for workflow dispatch, or with default `false` value for scheduled workflow. The value is passed to `docker buildx` as the `PUNGI_REPOS` build argument of the **Build images** and **Push images to Client Library** steps, and makes the **Prepare AlmaLinux Minor version number** step derive `version_minor` from the PUNGI compose instead of `repo.almalinux.org`
 
 - `date_time_stamp` - in format *%Y%m%d%H%M%S*, used for Mattermost notifications
 
@@ -715,7 +700,7 @@ Job proceeds to input `version_major` and iterates with selected `image_types` u
 
 #### Step: Prepare AlmaLinux Minor version number
 
-The step sets AlmaLinux `version_minor` according to set on inputs `version_major`.
+The step sets AlmaLinux `version_minor` (empty for Kitten) from the `almalinux-release` package version read from the `BaseOS` repodata of the repository the images are built from: `https://repo.almalinux.org/almalinux/<version_major>/BaseOS/x86_64/os`, or, when `pungi_repos` is `true` (AlmaLinux 9 and 10 only), the PUNGI compose `https://x86-64-pungi-<version_major>.almalinux.dev/almalinux/<version_major>/x86_64/latest_result_almalinux/compose/BaseOS/x86_64/os`. A PUNGI compose ships a pre-release `almalinux-release` (for example `10.3` while `repo.almalinux.org` still ships `10.2`), so a PUNGI build produces `10.3` images while scheduled builds keep producing `10.2` ones. The step fails if the version can not be derived.
 
 #### Step: Check update
 
